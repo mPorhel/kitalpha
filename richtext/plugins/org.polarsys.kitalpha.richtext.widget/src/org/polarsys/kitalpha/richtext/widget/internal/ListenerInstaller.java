@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2023 Thales Global Services S.A.S.
+ * Copyright (c) 2017, 2024 Thales Global Services S.A.S. and others
  *  This program and the accompanying materials are made available under the
  *  terms of the Eclipse Public License 2.0 which is available at
  *  http://www.eclipse.org/legal/epl-2.0
@@ -8,6 +8,7 @@
  * 
  * Contributors:
  *  Thales Global Services S.A.S - initial API and implementation
+ *  Obeo - Linux Webkit GTK compatibility
  ******************************************************************************/
 package org.polarsys.kitalpha.richtext.widget.internal;
 
@@ -19,6 +20,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.browser.BrowserFunction;
+import org.eclipse.swt.widgets.Display;
 import org.polarsys.kitalpha.richtext.common.impl.AbstractMDERichTextWidget;
 import org.polarsys.kitalpha.richtext.common.intf.MDERichTextWidget;
 import org.polarsys.kitalpha.richtext.nebula.widget.MDENebulaBasedRichTextWidget;
@@ -40,9 +42,24 @@ public class ListenerInstaller {
 	 * {@link ListenerInstaller#installAllListeners(MDENebulaBasedRichTextWidget)}
 	 * method must be called afterwards.
 	 * 
-	 * @param widget the rich text widget.
+	 * @param widget
+	 *            the rich text widget.
 	 */
 	public void createAllListeners(final MDENebulaBasedRichTextWidget widget) {
+		if (Platform.OS_LINUX.equals(Platform.getOS())) {
+			Display.getCurrent().asyncExec(new Runnable() {
+
+				@Override
+				public void run() {
+					doCreateAllListeners(widget);
+				}
+			});
+		} else {
+			doCreateAllListeners(widget);
+		}
+	}
+
+	private void doCreateAllListeners(final MDENebulaBasedRichTextWidget widget) {
 		createBeforePasteConfirmationDialogListener(widget);
 		createOpenLinkListener(widget);
 		createSaveListener(widget);
@@ -64,12 +81,26 @@ public class ListenerInstaller {
 	 * @param widget the rich text widget.
 	 */
 	public void installAllListeners(final MDENebulaBasedRichTextWidget widget) {
+		if (Platform.OS_LINUX.equals(Platform.getOS())) {
+			Display.getCurrent().asyncExec(new Runnable() {
+
+				@Override
+				public void run() {
+					doInstallAllListeners(widget);
+				}
+			});
+		} else {
+			doInstallAllListeners(widget);
+		}
+	}
+
+	private void doInstallAllListeners(MDENebulaBasedRichTextWidget widget) {
 		installBeforePasteConfirmationDialogListener(widget);
 		installOpenLinkListener(widget);
-    installFocusOutListener(widget);
+		installFocusOutListener(widget);
 		installChangeNotificationHandlerListener(widget);
 		installChangeContentListener(widget);
-    installFocusInListener(widget);
+		installFocusInListener(widget);
 		installDataReadyEventListener(widget);
 		installSetDataEventListener(widget);
 	}
@@ -186,7 +217,17 @@ public class ListenerInstaller {
 		new BrowserFunction(widget.getBrowser(), "saveContent") { //$NON-NLS-1$
 			@Override
 			public Object function(Object[] arguments) {
-				widget.saveContent();
+				if (Platform.OS_LINUX.equals(Platform.getOS())) {
+					Display.getCurrent().asyncExec(new Runnable() {
+
+						@Override
+						public void run() {
+							widget.saveContent();
+						}
+					});
+				} else {
+					widget.saveContent();
+				}
 				return null;
 			}
 		};
@@ -263,6 +304,21 @@ public class ListenerInstaller {
     new BrowserFunction(widget.getBrowser(), "onChangeEvent") { //$NON-NLS-1$
       @Override
       public Object function(Object[] arguments) {
+        if (Platform.OS_LINUX.equals(Platform.getOS())) {
+          Display.getCurrent().asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+              onChangeEvent(widget);
+            }
+          });
+        } else {
+          onChangeEvent(widget);
+        }
+        return null;
+     }
+
+      private void onChangeEvent(final MDENebulaBasedRichTextWidget widget) {
         if (!widget.isDirtyStateUpdated()) {
           // In some case, saveContent is called in a context where the model is persisted. In this context,
           // setDirtyStateUpdated(false) need to be called so that saveContent is called at the next editor change.
@@ -272,10 +328,9 @@ public class ListenerInstaller {
           widget.saveContent();
           widgetSaveTriggeredByContentChangeDetection[0] = false;
         }
-        return null;
       }
     };
-	}
+  }
 
   /**
    * Inject java script that calls dedicated functions when the editor receives a 'change' in event.
