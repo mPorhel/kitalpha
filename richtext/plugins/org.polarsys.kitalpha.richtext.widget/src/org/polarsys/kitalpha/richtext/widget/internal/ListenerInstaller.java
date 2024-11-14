@@ -46,7 +46,7 @@ public class ListenerInstaller {
 	 *            the rich text widget.
 	 */
 	public void createAllListeners(final MDENebulaBasedRichTextWidget widget) {
-		if (Platform.OS_LINUX.equals(Platform.getOS())) {
+		if (Platform.OS_LINUX.equals(Platform.getOS()) && !Boolean.getBoolean("org.polarsys.kitalpha.richtext.webkit.gtk.compatibility.workaround.disable")) {
 			Display.getCurrent().asyncExec(new Runnable() {
 
 				@Override
@@ -81,7 +81,7 @@ public class ListenerInstaller {
 	 * @param widget the rich text widget.
 	 */
 	public void installAllListeners(final MDENebulaBasedRichTextWidget widget) {
-		if (Platform.OS_LINUX.equals(Platform.getOS())) {
+		if (Platform.OS_LINUX.equals(Platform.getOS()) && !Boolean.getBoolean("org.polarsys.kitalpha.richtext.webkit.gtk.compatibility.workaround.disable")) {
 			Display.getCurrent().asyncExec(new Runnable() {
 
 				@Override
@@ -217,7 +217,7 @@ public class ListenerInstaller {
 		new BrowserFunction(widget.getBrowser(), "saveContent") { //$NON-NLS-1$
 			@Override
 			public Object function(Object[] arguments) {
-				if (Platform.OS_LINUX.equals(Platform.getOS())) {
+				if (Platform.OS_LINUX.equals(Platform.getOS()) && !Boolean.getBoolean("org.polarsys.kitalpha.richtext.webkit.gtk.compatibility.workaround.disable")) {
 					Display.getCurrent().asyncExec(new Runnable() {
 
 						@Override
@@ -304,7 +304,7 @@ public class ListenerInstaller {
     new BrowserFunction(widget.getBrowser(), "onChangeEvent") { //$NON-NLS-1$
       @Override
       public Object function(Object[] arguments) {
-        if (Platform.OS_LINUX.equals(Platform.getOS())) {
+    	  if (Platform.OS_LINUX.equals(Platform.getOS()) && !Boolean.getBoolean("org.polarsys.kitalpha.richtext.webkit.gtk.compatibility.workaround.disable")) {
           Display.getCurrent().asyncExec(new Runnable() {
 
             @Override
